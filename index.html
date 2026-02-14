@@ -1,62 +1,92 @@
-<script>
-    let isLoaded = false;
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L2 Navigator</title>
+    <style>
+        body, html { margin: 0; padding: 0; background: white; height: 100%; width: 100%; font-family: -apple-system, sans-serif; overflow: hidden; }
+        #app { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: white; }
+        #splash { text-align: center; cursor: pointer; transition: opacity 0.5s; }
+        .logo { letter-spacing: 12px; font-weight: 300; font-size: 28px; margin: 0; }
+        .slogan { color: #666; letter-spacing: 2px; line-height: 2.2; margin-top: 30px; }
+        /* 强制给容器一个最小高度，防止白屏 */
+        #lifi-widget-container { display: none; width: 420px; min-height: 600px; background: white; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="splash" onclick="safeLaunch()">
+            <h1 class="logo">LOGO</h1>
+            <p class="slogan">世 界 太 吵 书 写，然 后 交 付<br>终 焉 在 此 刻，交 还 所 有</p>
+            <p id="status-hint" style="color: #CCC; font-size: 12px; margin-top: 40px;">[ 协议同步中... ]</p>
+        </div>
+        <div id="lifi-widget-container"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     
-    // 监听脚本是否真的加载到了全局变量
-    function loaded() {
-        console.log("LiFi 资源已物理就绪");
-        isLoaded = true;
-        const msg = document.getElementById('msg');
-        if (msg) {
-            msg.innerText = "[ 交付就绪 - 点击进入 ]";
-            msg.style.color = "#000";
-        }
-    }
+    <script src="/lifi-widget.js" async onload="onReady()"></script>
 
-    // 备用检查：防止 onload 不触发
-    setInterval(() => {
-        if (!isLoaded && typeof LiFiWidget !== 'undefined') {
-            loaded();
-        }
-    }, 1000);
+    <script>
+        let ready = false;
 
-    function activate() {
-        if (!isLoaded || typeof LiFiWidget === 'undefined') {
-            alert("协议尚未同步，请稍等或刷新");
-            return;
-        }
-
-        // 1. 彻底移除封面，释放空间
-        const splash = document.getElementById('splash');
-        splash.remove(); 
-
-        // 2. 动态创建容器（避免隐藏导致的渲染空白）
-        const container = document.createElement('div');
-        container.id = 'lifi-widget-active';
-        container.style.width = '420px';
-        container.style.height = '640px';
-        container.style.margin = '0 auto';
-        document.getElementById('app').appendChild(container);
-
-        // 3. 执行 v1.3 样式渲染
-        const config = {
-            integrator: 'l2-navigator',
-            appearance: 'light',
-            containerStyle: {
-                border: '1px solid #EEE',
-                borderRadius: '16px'
-            },
-            theme: {
-                palette: { primary: { main: '#000000' } }
+        function onReady() {
+            // 严谨校验：确保 React 和 LiFi 全部到场
+            if (window.React && window.LiFiWidget) {
+                ready = true;
+                const hint = document.getElementById('status-hint');
+                hint.innerText = "[ 交付就绪 - 点击进入 ]";
+                hint.style.color = "#000";
             }
-        };
-
-        try {
-            console.log("正在初始化面板...");
-            // 直接将组件挂载到新创建的容器中
-            LiFiWidget.renderWidget(container.id, config);
-        } catch (e) {
-            console.error("渲染异常:", e);
-            container.innerHTML = `<p style="color:red">渲染冲突，请尝试刷新页面</p>`;
         }
-    }
-</script>
+
+        // 备用轮询，防止 onload 偶发不触发
+        const timer = setInterval(() => {
+            if (window.LiFiWidget && window.React) {
+                onReady();
+                clearInterval(timer);
+            }
+        }, 500);
+
+        function safeLaunch() {
+            if (!ready) {
+                alert("环境尚未完全对齐，请稍等或检查 lifi-widget.js 是否已上传至根目录。");
+                return;
+            }
+
+            // 执行切换
+            document.getElementById('splash').style.display = 'none';
+            const container = document.getElementById('lifi-widget-container');
+            container.style.display = 'block';
+
+            // 严格执行 v1.3 预测面板样式
+            const widgetConfig = {
+                integrator: 'l2-navigator',
+                appearance: 'light',
+                containerStyle: {
+                    border: '1px solid #EEE',
+                    borderRadius: '20px',
+                    boxShadow: '0 10px 40px rgba(0,0,0,0.04)'
+                },
+                theme: {
+                    palette: { primary: { main: '#000000' } }
+                }
+            };
+
+            try {
+                // 最终挂载
+                LiFiWidget.renderWidget(container, widgetConfig);
+                console.log("LiFi Widget 渲染指令已发出");
+            } catch (err) {
+                console.error("渲染阶段崩溃:", err);
+                container.innerHTML = `<div style="padding:20px;text-align:center;">
+                    <p>渲染失败，请检查浏览器控制台报错。</p>
+                    <button onclick="location.reload()">刷新重试</button>
+                </div>`;
+            }
+        }
+    </script>
+</body>
+</html>
