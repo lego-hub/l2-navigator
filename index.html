@@ -4,53 +4,110 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>L2 Navigator</title>
-    <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@lifi/widget@3.10.0/dist/index.min.js"></script>
+    
     <style>
-        body, html { margin: 0; padding: 0; background: white; height: 100%; width: 100%; overflow: hidden; }
-        #app { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
-        #splash { text-align: center; cursor: pointer; transition: opacity 0.3s; }
-        #widget-root { display: none; width: 420px; height: 640px; border: 1px solid #f0f0f0; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.05); }
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            background-color: white; 
+            height: 100%; 
+            width: 100%; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
+        }
+        #app { 
+            width: 100%; 
+            height: 100%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+        }
+        #splash { 
+            text-align: center; 
+            cursor: pointer; 
+            padding: 20px;
+        }
+        #widget-root { 
+            display: none; 
+            width: 100%; 
+            max-width: 420px; 
+            height: 640px; 
+            background: white;
+            border-radius: 16px;
+        }
+        .error-msg {
+            color: #ff4d4f;
+            font-size: 14px;
+            margin-top: 20px;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div id="app">
-        <div id="splash" onclick="startApp()">
-            <h1 style="letter-spacing: 12px; font-weight: 300;">LOGO</h1>
-            <p style="color: #666; letter-spacing: 2px; line-height: 2;">
-                世 界 太 吵 书 写，然 后 交 付<br>终 焉 在 此 刻，交 还 所 有
+        <div id="splash" onclick="initLiFi()">
+            <h1 style="letter-spacing: 12px; font-weight: 300; font-size: 28px; margin-bottom: 30px;">LOGO</h1>
+            <p style="color: #666; letter-spacing: 2px; line-height: 2.2; font-size: 14px;">
+                世 界 太 吵 书 写，然 后 交 付<br>
+                终 焉 在 此 刻，交 还 所 有
             </p>
-            <p style="color: #999; font-size: 12px; margin-top: 20px;">[ 点击进入 ]</p>
+            <p style="color: #CCC; font-size: 12px; margin-top: 40px; letter-spacing: 1px;">[ 点击进入 ]</p>
+            <div id="error-hint" class="error-msg">环境加载中，请稍后重试或检查网络...</div>
         </div>
+
         <div id="widget-root"></div>
     </div>
 
     <script>
-        function startApp() {
-            console.log("尝试初始化 LiFi Widget...");
-            document.getElementById('splash').style.display = 'none';
+        function initLiFi() {
+            const splash = document.getElementById('splash');
             const container = document.getElementById('widget-root');
+            const errorHint = document.getElementById('error-hint');
+
+            // 1. 检查 LiFi 是否加载成功
+            if (typeof LiFiWidget === 'undefined') {
+                console.error("LiFiWidget 未定义，尝试动态修复...");
+                errorHint.style.display = 'block';
+                
+                // 动态注入备用脚本
+                const backupScript = document.createElement('script');
+                backupScript.src = "https://cdn.jsdelivr.net/npm/@lifi/widget@3.10.0/dist/index.min.js";
+                backupScript.onload = () => {
+                    errorHint.innerText = "环境修复成功，请再次点击";
+                    errorHint.style.color = "green";
+                };
+                document.head.appendChild(backupScript);
+                return;
+            }
+
+            // 2. 执行显示逻辑
+            splash.style.display = 'none';
             container.style.display = 'block';
 
-            try {
-                if (typeof LiFiWidget === 'undefined') {
-                    throw new Error("LiFi 脚本未加载成功，请检查网络或代理设置。");
+            // 3. 配置跨链面板 (遵循 v1.3 样式)
+            const config = {
+                integrator: 'l2-navigator',
+                appearance: 'light',
+                containerStyle: {
+                    border: '1px solid #EEEEEE',
+                    borderRadius: '16px',
+                },
+                theme: {
+                    palette: {
+                        primary: { main: '#000000' }
+                    }
                 }
+            };
 
-                const config = {
-                    integrator: 'l2-navigator',
-                    appearance: 'light',
-                    containerStyle: { border: 'none' },
-                    theme: { palette: { primary: { main: '#000000' } } }
-                };
-
-                // 执行渲染
+            try {
+                // 渲染挂件
                 LiFiWidget.renderWidget(container, config);
-                console.log("渲染指令已发送");
             } catch (err) {
-                console.error(err);
-                container.innerHTML = `<div style="padding:20px; color:red;">加载失败: ${err.message}</div>`;
+                console.error("渲染过程出错:", err);
+                container.innerHTML = "<div style='padding:20px;text-align:center;'>面板初始化失败，请尝试刷新页面。</div>";
             }
         }
     </script>
