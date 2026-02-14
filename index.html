@@ -4,48 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>L2 Navigator</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@lifi/widget@3.10.0/dist/index.min.js"></script>
+    <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@lifi/widget@3.10.0/dist/index.min.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; background: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        #app { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
-        #splash { text-align: center; cursor: pointer; transition: opacity 0.5s; }
-        #widget-root { display: none; width: 420px; height: 640px; }
+        body, html { margin: 0; padding: 0; background: white; height: 100%; width: 100%; overflow: hidden; }
+        #app { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+        #splash { text-align: center; cursor: pointer; transition: opacity 0.3s; }
+        #widget-root { display: none; width: 420px; height: 640px; border: 1px solid #f0f0f0; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
     <div id="app">
-        <div id="splash" onclick="showWidget()">
-            <h1 style="letter-spacing: 12px; font-weight: 300; font-size: 28px;">LOGO</h1>
-            <p style="color: #666; letter-spacing: 2px; margin-top: 30px; line-height: 2;">
-                世 界 太 吵 书 写，然 后 交 付<br>
-                终 焉 在 此 刻，交 还 所 有
+        <div id="splash" onclick="startApp()">
+            <h1 style="letter-spacing: 12px; font-weight: 300;">LOGO</h1>
+            <p style="color: #666; letter-spacing: 2px; line-height: 2;">
+                世 界 太 吵 书 写，然 后 交 付<br>终 焉 在 此 刻，交 还 所 有
             </p>
-            <p style="color: #CCC; font-size: 12px; margin-top: 40px;">[ 点击进入 ]</p>
+            <p style="color: #999; font-size: 12px; margin-top: 20px;">[ 点击进入 ]</p>
         </div>
-
         <div id="widget-root"></div>
     </div>
 
     <script>
-        function showWidget() {
+        function startApp() {
+            console.log("尝试初始化 LiFi Widget...");
             document.getElementById('splash').style.display = 'none';
             const container = document.getElementById('widget-root');
             container.style.display = 'block';
 
-            // 锁死 v1.3 版本的样式配置
-            const config = {
-                integrator: 'l2-navigator',
-                appearance: 'light',
-                theme: {
-                    palette: { primary: { main: '#000000' } },
-                    shape: { borderRadius: 16 },
+            try {
+                if (typeof LiFiWidget === 'undefined') {
+                    throw new Error("LiFi 脚本未加载成功，请检查网络或代理设置。");
                 }
-            };
 
-            // 关键：这里直接调用 LiFi 官方构建好的全量对象，绝不会报错
-            LiFiWidget.renderWidget(container, config);
+                const config = {
+                    integrator: 'l2-navigator',
+                    appearance: 'light',
+                    containerStyle: { border: 'none' },
+                    theme: { palette: { primary: { main: '#000000' } } }
+                };
+
+                // 执行渲染
+                LiFiWidget.renderWidget(container, config);
+                console.log("渲染指令已发送");
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = `<div style="padding:20px; color:red;">加载失败: ${err.message}</div>`;
+            }
         }
     </script>
 </body>
