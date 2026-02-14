@@ -1,7 +1,7 @@
 {
   "name": "l2-navigator",
   "private": true,
-  "version": "1.3.0",
+  "version": "1.3.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,11 +16,13 @@
     "viem": "2.21.0",
     "wagmi": "2.12.0",
     "@emotion/react": "11.11.4",
-    "@emotion/styled": "11.11.0",
-    "polished": "4.3.1"
+    "@emotion/styled": "11.11.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "4.2.1",
     "vite": "5.2.0"
+  },
+  "overrides": {
+    "viem": "2.21.0"
   }
 }
